@@ -1,12 +1,16 @@
 using System;
-namespace Projecttest
+using System.Globalization;
+
+namespace Programmain
 {
-  class Printofpython
-  {
-    static void Main(string[] args)
+    class MMain
     {
-      Console.WriteLine("Hello World\nPress Enter to exit");
-      Console.Readline();
-    }
-  }
+        static void Main(string[] args)
+        {
+            Console.WriteLine("hi\n");
+            Console.Write("Enter your name: ");
+            string x = Console.ReadLine();
+            Console.WriteLine("Hi " + x);
+        }
+    }   
 }
