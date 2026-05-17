@@ -15,7 +15,9 @@ class KnowledgeBase:
             "time": "Time is relative, but for me, it's just a sequence of data points. How are you spending yours?",
             "friends": "Friends are people who support and care for each other. I'm happy to be your digital friend!",
             "weather": "I don't have windows, but I can tell you that a sunny disposition always helps!",
-            "smart": "I know a little bit about everything, but there's always more to learn from you!"
+            "smart": "I know a little bit about everything, but there's always more to learn from you!",
+            "feel": "",
+            "feelings": "Feelings is the thing what do you think, how do you think, what you feel"
         }
         self.friend_responses = [
             "I'm here for you! What's on your mind?",
