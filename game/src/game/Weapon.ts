@@ -5,10 +5,14 @@ export class Weapon {
   private gunBody: THREE.Mesh;
   private muzzleFlash: THREE.PointLight;
   private originalPosition = new THREE.Vector3(0.3, -0.3, -0.5);
+  private adsPosition = new THREE.Vector3(0, -0.15, -0.4);
+  private currentTargetPosition = new THREE.Vector3();
+  
   private bobAmount = 0.02;
   private bobSpeed = 10;
   private recoilAmount = 0.1;
   private isShooting = false;
+  private isAiming = false;
 
   constructor(camera: THREE.Camera) {
     this.mesh = new THREE.Group();
@@ -26,22 +30,38 @@ export class Weapon {
     barrel.position.z = -0.3;
     this.mesh.add(barrel);
 
+    // Sight (Front Post)
+    const sightGeo = new THREE.BoxGeometry(0.01, 0.04, 0.01);
+    const sightMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+    const sight = new THREE.Mesh(sightGeo, sightMat);
+    sight.position.set(0, 0.08, -0.4);
+    this.mesh.add(sight);
+
     // Muzzle Flash Light
     this.muzzleFlash = new THREE.PointLight(0xffaa00, 0, 2);
     this.muzzleFlash.position.z = -0.5;
     this.mesh.add(this.muzzleFlash);
 
-    this.mesh.position.copy(this.originalPosition);
+    this.currentTargetPosition.copy(this.originalPosition);
+    this.mesh.position.copy(this.currentTargetPosition);
     camera.add(this.mesh);
   }
 
+  public setAim(isAiming: boolean) {
+    this.isAiming = isAiming;
+    this.currentTargetPosition.copy(isAiming ? this.adsPosition : this.originalPosition);
+  }
+
   public update(isMoving: boolean, time: number) {
-    // Bobbing
+    // Smooth transition to target position (ADS or Hip)
+    this.mesh.position.lerp(this.currentTargetPosition, 0.2);
+
+    // Reduced bobbing when aiming
+    const currentBobAmount = this.isAiming ? this.bobAmount * 0.2 : this.bobAmount;
+    
     if (isMoving) {
-      this.mesh.position.y = this.originalPosition.y + Math.sin(time * this.bobSpeed) * this.bobAmount;
-      this.mesh.position.x = this.originalPosition.x + Math.cos(time * this.bobSpeed * 0.5) * this.bobAmount;
-    } else {
-      this.mesh.position.lerp(this.originalPosition, 0.1);
+      this.mesh.position.y += Math.sin(time * this.bobSpeed) * currentBobAmount;
+      this.mesh.position.x += Math.cos(time * this.bobSpeed * 0.5) * currentBobAmount;
     }
   }
 
@@ -49,13 +69,14 @@ export class Weapon {
     if (this.isShooting) return;
     this.isShooting = true;
 
-    // Recoil
-    this.mesh.position.z += this.recoilAmount;
+    // Recoil (less recoil in ADS)
+    const currentRecoil = this.isAiming ? this.recoilAmount * 0.5 : this.recoilAmount;
+    this.mesh.position.z += currentRecoil;
     this.muzzleFlash.intensity = 2;
 
     setTimeout(() => {
       this.muzzleFlash.intensity = 0;
-      this.mesh.position.z = this.originalPosition.z;
+      this.mesh.position.z = this.currentTargetPosition.z;
       this.isShooting = false;
     }, 50);
   }

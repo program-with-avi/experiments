@@ -6,11 +6,19 @@ export class Player {
   private camera: THREE.PerspectiveCamera;
   private controls: Controls;
   private weapon: Weapon;
-  private moveSpeed = 0.1;
-  private lookSensitivity = 0.05;
+  private moveSpeed = 0.15;
+  
+  private lookSensitivityX = 0.0012; 
+  private lookSensitivityY = 0.0008; 
+  
   private rotationY = 0;
   private rotationX = 0;
   private isMoving = false;
+  private velocityY = 0;
+  private isGrounded = true;
+  private gravity = -0.01;
+  private jumpForce = 0.2;
+  private isAiming = false;
 
   constructor(camera: THREE.PerspectiveCamera, controls: Controls) {
     this.camera = camera;
@@ -21,7 +29,41 @@ export class Player {
   public update() {
     this.handleMovement();
     this.handleRotation();
+    this.applyGravity();
+    this.handleFOV();
     this.weapon.update(this.isMoving, Date.now() * 0.001);
+  }
+
+  public setAim(isAiming: boolean) {
+    this.isAiming = isAiming;
+    this.weapon.setAim(isAiming);
+  }
+
+  private handleFOV() {
+    const targetFOV = this.isAiming ? 45 : 75;
+    if (this.camera.fov !== targetFOV) {
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFOV, 0.2);
+      this.camera.updateProjectionMatrix();
+    }
+  }
+
+  public jump() {
+    if (this.isGrounded) {
+      this.velocityY = this.jumpForce;
+      this.isGrounded = false;
+    }
+  }
+
+  private applyGravity() {
+    this.camera.position.y += this.velocityY;
+    if (this.camera.position.y > 1.7) {
+      this.velocityY += this.gravity;
+      this.isGrounded = false;
+    } else {
+      this.camera.position.y = 1.7;
+      this.velocityY = 0;
+      this.isGrounded = true;
+    }
   }
 
   public shoot() {
@@ -30,9 +72,7 @@ export class Player {
   }
 
   private shakeCamera() {
-    const originalPos = this.camera.position.clone();
-    const intensity = 0.05;
-    
+    const intensity = this.isAiming ? 0.01 : 0.03;
     const shake = () => {
       this.camera.position.x += (Math.random() - 0.5) * intensity;
       this.camera.position.y += (Math.random() - 0.5) * intensity;
@@ -41,17 +81,24 @@ export class Player {
     const interval = setInterval(shake, 16);
     setTimeout(() => {
       clearInterval(interval);
-      // Reset position relative to camera parent or absolute? 
-      // Camera is moved by handleMovement, so we just let it be.
     }, 50);
   }
 
   private handleMovement() {
-    const moveX = this.controls.moveData.x;
-    const moveY = this.controls.moveData.y;
+    let moveX = this.controls.moveData.x;
+    let moveY = this.controls.moveData.y;
 
-    if (moveX !== 0 || moveY !== 0) {
+    if (this.controls.keys['KeyW']) moveY = 1;
+    if (this.controls.keys['KeyS']) moveY = -1;
+    if (this.controls.keys['KeyA']) moveX = -1;
+    if (this.controls.keys['KeyD']) moveX = 1;
+
+    // Slower movement when aiming
+    const currentSpeed = this.isAiming ? this.moveSpeed * 0.5 : this.moveSpeed;
+
+    if (Math.abs(moveX) > 0.05 || Math.abs(moveY) > 0.05) {
       this.isMoving = true;
+      
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
       forward.y = 0;
       forward.normalize();
@@ -60,26 +107,33 @@ export class Player {
       right.y = 0;
       right.normalize();
 
-      this.camera.position.addScaledVector(forward, moveY * this.moveSpeed);
-      this.camera.position.addScaledVector(right, moveX * this.moveSpeed);
+      this.camera.position.addScaledVector(forward, moveY * currentSpeed);
+      this.camera.position.addScaledVector(right, moveX * currentSpeed);
     } else {
       this.isMoving = false;
     }
   }
 
-
   private handleRotation() {
     const lookX = this.controls.lookData.x;
     const lookY = this.controls.lookData.y;
 
-    if (lookX !== 0 || lookY !== 0) {
-      this.rotationY -= lookX * this.lookSensitivity;
-      this.rotationX += lookY * this.lookSensitivity;
+    // Slower look sensitivity when aiming
+    const sensitivityMultiplier = this.isAiming ? 0.4 : 1.0;
 
-      // Clamp vertical rotation
-      this.rotationX = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, this.rotationX));
-
-      this.camera.quaternion.setFromEuler(new THREE.Euler(this.rotationX, this.rotationY, 0, 'YXZ'));
+    if (Math.abs(lookX) > 0.001) {
+      this.rotationY -= lookX * 40 * this.lookSensitivityX * sensitivityMultiplier;
     }
+
+    if (Math.abs(lookY) > 0.001) {
+      this.rotationX += lookY * 40 * this.lookSensitivityY * sensitivityMultiplier;
+      this.rotationX = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, this.rotationX));
+    }
+
+    this.camera.quaternion.setFromEuler(new THREE.Euler(this.rotationX, this.rotationY, 0, 'YXZ'));
+  }
+
+  public upgradeSpeed() {
+    this.moveSpeed *= 1.5;
   }
 }

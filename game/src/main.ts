@@ -20,8 +20,8 @@ class Game {
 
   constructor() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x87ceeb);
-    this.scene.fog = new THREE.Fog(0x87ceeb, 0, 100);
+    this.scene.background = new THREE.Color(0x00050a); // Matching map background
+    this.scene.fog = new THREE.FogExp2(0x00050a, 0.015);
 
     this.camera = new THREE.PerspectiveCamera(
       75,
@@ -38,12 +38,15 @@ class Game {
     this.renderer.shadowMap.enabled = true;
     document.getElementById('app')?.appendChild(this.renderer.domElement);
 
+    // Initialize map BEFORE controls and player to ensure scene is ready
+    this.map = new Map(this.scene);
     this.controls = new Controls();
     this.player = new Player(this.camera, this.controls);
-    this.map = new Map(this.scene);
     this.raycaster = new THREE.Raycaster();
 
     this.controls.onFire = () => this.shoot();
+    this.controls.onJump = () => this.player.jump();
+    this.controls.onAim = (isAiming) => this.player.setAim(isAiming);
     this.controls.onPurchase = (item) => this.handlePurchase(item);
 
     this.initLights();
@@ -51,6 +54,8 @@ class Game {
     this.initMultiplayerUI();
 
     window.addEventListener('resize', () => this.onWindowResize());
+    
+    // Start the animation loop
     this.animate();
   }
 
@@ -216,21 +221,17 @@ class Game {
   }
 
   private initLights() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Dimmer ambient
     this.scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xffffff, 1);
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
     sun.position.set(50, 100, 50);
     sun.castShadow = true;
-    sun.shadow.camera.left = -50;
-    sun.shadow.camera.right = 50;
-    sun.shadow.camera.top = 50;
-    sun.shadow.camera.bottom = -50;
     this.scene.add(sun);
   }
 
   private initPracticeTargets() {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) { // More targets
       const group = new THREE.Group();
 
       // Body
@@ -249,9 +250,9 @@ class Game {
       group.add(head);
 
       group.position.set(
-        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 160,
         0,
-        (Math.random() - 0.5) * 80
+        (Math.random() - 0.5) * 160
       );
       
       this.scene.add(group);
@@ -268,7 +269,9 @@ class Game {
   private animate() {
     requestAnimationFrame(() => this.animate());
     
-    this.player.update();
+    if (this.player) {
+      this.player.update();
+    }
 
     if (this.socket && this.socket.connected) {
       this.socket.emit('playerMovement', {
@@ -276,13 +279,6 @@ class Game {
         rotation: { x: 0, y: this.camera.rotation.y, z: 0 }
       });
     }
-
-    this.targets.forEach((target) => {
-      if (target.parent instanceof THREE.Group) {
-        // We only animate the parent group once per frame if needed, 
-        // but here they are static practice targets for now.
-      }
-    });
 
     this.renderer.render(this.scene, this.camera);
   }
