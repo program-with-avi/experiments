@@ -5,12 +5,14 @@ export class Weapon {
   private gunBody: THREE.Mesh;
   private muzzleFlash: THREE.PointLight;
   private originalPosition = new THREE.Vector3(0.3, -0.3, -0.5);
-  private adsPosition = new THREE.Vector3(0, -0.15, -0.4);
+  
+  // RECALIBRATED ADS POSITION FOR PERFECT CENTER
+  private adsPosition = new THREE.Vector3(0, -0.12, -0.4); 
   private currentTargetPosition = new THREE.Vector3();
   
-  private bobAmount = 0.02;
-  private bobSpeed = 10;
-  private recoilAmount = 0.1;
+  private bobAmount = 0.005; 
+  private bobSpeed = 8;
+  private recoilAmount = 0.05;
   private isShooting = false;
   private isAiming = false;
 
@@ -24,22 +26,36 @@ export class Weapon {
     this.mesh.add(this.gunBody);
 
     // Barrel
-    const barrelGeo = new THREE.BoxGeometry(0.05, 0.05, 0.3);
+    const barrelGeo = new THREE.BoxGeometry(0.04, 0.04, 0.3);
     const barrelMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
     const barrel = new THREE.Mesh(barrelGeo, barrelMat);
     barrel.position.z = -0.3;
     this.mesh.add(barrel);
 
-    // Sight (Front Post)
-    const sightGeo = new THREE.BoxGeometry(0.01, 0.04, 0.01);
-    const sightMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-    const sight = new THREE.Mesh(sightGeo, sightMat);
-    sight.position.set(0, 0.08, -0.4);
-    this.mesh.add(sight);
+    // --- NEW PRECISION SIGHT SYSTEM ---
+    const sightGroup = new THREE.Group();
+    sightGroup.position.set(0, 0.12, -0.1); // Position on top of gun
 
-    // Muzzle Flash Light
+    // Circle Frame (Torus)
+    const frameGeo = new THREE.TorusGeometry(0.04, 0.004, 8, 32);
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const frame = new THREE.Mesh(frameGeo, frameMat);
+    // Rotate torus to face the camera
+    frame.rotation.y = Math.PI;
+    sightGroup.add(frame);
+
+    // Red Dot (Small emissive sphere)
+    const dotGeo = new THREE.SphereGeometry(0.004, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const dot = new THREE.Mesh(dotGeo, dotMat);
+    dot.position.set(0, 0, 0); // Center of the frame
+    sightGroup.add(dot);
+
+    this.mesh.add(sightGroup);
+
+    // Muzzle Flash
     this.muzzleFlash = new THREE.PointLight(0xffaa00, 0, 2);
-    this.muzzleFlash.position.z = -0.5;
+    this.muzzleFlash.position.set(0, 0.05, -0.5);
     this.mesh.add(this.muzzleFlash);
 
     this.currentTargetPosition.copy(this.originalPosition);
@@ -53,15 +69,13 @@ export class Weapon {
   }
 
   public update(isMoving: boolean, time: number) {
-    // Smooth transition to target position (ADS or Hip)
-    this.mesh.position.lerp(this.currentTargetPosition, 0.2);
+    this.mesh.position.lerp(this.currentTargetPosition, 0.3);
 
-    // Reduced bobbing when aiming
-    const currentBobAmount = this.isAiming ? this.bobAmount * 0.2 : this.bobAmount;
+    const currentBobAmount = this.isAiming ? this.bobAmount * 0.1 : this.bobAmount;
     
     if (isMoving) {
       this.mesh.position.y += Math.sin(time * this.bobSpeed) * currentBobAmount;
-      this.mesh.position.x += Math.cos(time * this.bobSpeed * 0.5) * currentBobAmount;
+      this.mesh.position.x += Math.cos(time * this.bobSpeed * 0.5) * (currentBobAmount * 0.5);
     }
   }
 
@@ -69,8 +83,7 @@ export class Weapon {
     if (this.isShooting) return;
     this.isShooting = true;
 
-    // Recoil (less recoil in ADS)
-    const currentRecoil = this.isAiming ? this.recoilAmount * 0.5 : this.recoilAmount;
+    const currentRecoil = this.isAiming ? this.recoilAmount * 0.3 : this.recoilAmount;
     this.mesh.position.z += currentRecoil;
     this.muzzleFlash.intensity = 2;
 

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 export class Map {
   private scene: THREE.Scene;
+  public collidables: THREE.Mesh[] = [];
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -9,7 +10,7 @@ export class Map {
   }
 
   private initArena() {
-    // Ground - Grid Texture
+    // Ground
     const groundGeo = new THREE.PlaneGeometry(200, 200);
     const groundMat = new THREE.MeshStandardMaterial({ 
       color: 0x111111,
@@ -28,7 +29,6 @@ export class Map {
     grid.position.y = 0.05;
     this.scene.add(grid);
 
-    // Cyber Skybox (using fog and a large sphere)
     this.scene.background = new THREE.Color(0x00050a);
     this.scene.fog = new THREE.FogExp2(0x00050a, 0.015);
 
@@ -38,16 +38,13 @@ export class Map {
     this.createNeonWall(-100, 5, 0, 1, 20, 200, 0xff00ff); // West
     this.createNeonWall(100, 5, 0, 1, 20, 200, 0xff00ff);  // East
 
-    // Structured Obstacles (Arena Style)
+    // Structured Obstacles
     for (let i = 0; i < 30; i++) {
       const h = 2 + Math.random() * 6;
       const w = 2 + Math.random() * 4;
       const x = (Math.random() - 0.5) * 160;
       const z = (Math.random() - 0.5) * 160;
-      
-      // Avoid spawning near center
       if (Math.abs(x) < 10 && Math.abs(z) < 10) continue;
-
       this.createCyberCrate(x, h/2, z, w, h, w);
     }
 
@@ -67,8 +64,8 @@ export class Map {
     wall.castShadow = true;
     wall.receiveShadow = true;
     this.scene.add(wall);
+    this.collidables.push(wall);
 
-    // Glow effect (simplified)
     const glowGeo = new THREE.BoxGeometry(w + 0.2, h + 0.2, d + 0.2);
     const glowMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.1 });
     const glow = new THREE.Mesh(glowGeo, glowMat);
@@ -89,13 +86,15 @@ export class Map {
     crate.castShadow = true;
     crate.receiveShadow = true;
     this.scene.add(crate);
+    this.collidables.push(crate);
 
-    // Edge highlight
     const wireframe = new THREE.WireframeGeometry(geo);
     const line = new THREE.LineSegments(wireframe);
-    (line.material as THREE.Material).color = new THREE.Color(0x00ffff);
-    (line.material as THREE.Material).transparent = true;
-    (line.material as THREE.Material).opacity = 0.3;
+    // FIXED TYPE CASTING
+    const lineMat = line.material as THREE.LineBasicMaterial;
+    lineMat.color = new THREE.Color(0x00ffff);
+    lineMat.transparent = true;
+    lineMat.opacity = 0.3;
     line.position.set(x, y, z);
     this.scene.add(line);
   }

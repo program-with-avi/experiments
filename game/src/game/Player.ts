@@ -8,8 +8,8 @@ export class Player {
   private weapon: Weapon;
   private moveSpeed = 0.15;
   
-  private lookSensitivityX = 0.0012; 
-  private lookSensitivityY = 0.0008; 
+  private lookSensitivityX = 0.001; 
+  private lookSensitivityY = 0.0006; 
   
   private rotationY = 0;
   private rotationX = 0;
@@ -20,14 +20,17 @@ export class Player {
   private jumpForce = 0.2;
   private isAiming = false;
 
+  private playerBox = new THREE.Box3();
+  private playerRadius = 0.4; // More precise for FPS
+
   constructor(camera: THREE.PerspectiveCamera, controls: Controls) {
     this.camera = camera;
     this.controls = controls;
     this.weapon = new Weapon(this.camera);
   }
 
-  public update() {
-    this.handleMovement();
+  public update(collidables: THREE.Mesh[] = []) {
+    this.handleMovement(collidables);
     this.handleRotation();
     this.applyGravity();
     this.handleFOV();
@@ -40,9 +43,9 @@ export class Player {
   }
 
   private handleFOV() {
-    const targetFOV = this.isAiming ? 45 : 75;
+    const targetFOV = this.isAiming ? 40 : 75;
     if (this.camera.fov !== targetFOV) {
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFOV, 0.2);
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFOV, 0.25);
       this.camera.updateProjectionMatrix();
     }
   }
@@ -72,19 +75,16 @@ export class Player {
   }
 
   private shakeCamera() {
-    const intensity = this.isAiming ? 0.01 : 0.03;
+    const intensity = this.isAiming ? 0.005 : 0.02;
     const shake = () => {
       this.camera.position.x += (Math.random() - 0.5) * intensity;
       this.camera.position.y += (Math.random() - 0.5) * intensity;
     };
-
     const interval = setInterval(shake, 16);
-    setTimeout(() => {
-      clearInterval(interval);
-    }, 50);
+    setTimeout(() => clearInterval(interval), 50);
   }
 
-  private handleMovement() {
+  private handleMovement(collidables: THREE.Mesh[]) {
     let moveX = this.controls.moveData.x;
     let moveY = this.controls.moveData.y;
 
@@ -93,8 +93,7 @@ export class Player {
     if (this.controls.keys['KeyA']) moveX = -1;
     if (this.controls.keys['KeyD']) moveX = 1;
 
-    // Slower movement when aiming
-    const currentSpeed = this.isAiming ? this.moveSpeed * 0.5 : this.moveSpeed;
+    const currentSpeed = this.isAiming ? this.moveSpeed * 0.4 : this.moveSpeed;
 
     if (Math.abs(moveX) > 0.05 || Math.abs(moveY) > 0.05) {
       this.isMoving = true;
@@ -107,29 +106,69 @@ export class Player {
       right.y = 0;
       right.normalize();
 
-      this.camera.position.addScaledVector(forward, moveY * currentSpeed);
-      this.camera.position.addScaledVector(right, moveX * currentSpeed);
+      // Store current position
+      const oldPos = this.camera.position.clone();
+
+      // STEP-BY-STEP COLLISION RESOLUTION
+      
+      // 1. Try X axis
+      this.camera.position.x += (right.x * moveX + forward.x * moveY) * currentSpeed;
+      if (this.checkCollision(collidables)) {
+        this.camera.position.x = oldPos.x;
+      }
+
+      // 2. Try Z axis
+      this.camera.position.z += (right.z * moveX + forward.z * moveY) * currentSpeed;
+      if (this.checkCollision(collidables)) {
+        this.camera.position.z = oldPos.z;
+      }
     } else {
       this.isMoving = false;
     }
   }
 
+  private checkCollision(collidables: THREE.Mesh[]): boolean {
+    if (!collidables || collidables.length === 0) return false;
+
+    // Define Player Box centered around current camera position
+    // Height from ground (0) to slightly above camera (2.0)
+    this.playerBox.min.set(
+      this.camera.position.x - this.playerRadius,
+      0,
+      this.camera.position.z - this.playerRadius
+    );
+    this.playerBox.max.set(
+      this.camera.position.x + this.playerRadius,
+      2.0,
+      this.camera.position.z + this.playerRadius
+    );
+
+    for (const obj of collidables) {
+      // Ensure world matrix and bounding box are computed
+      obj.updateMatrixWorld();
+      if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+      
+      const objBox = new THREE.Box3().copy(obj.geometry.boundingBox!).applyMatrix4(obj.matrixWorld);
+      
+      if (this.playerBox.intersectsBox(objBox)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private handleRotation() {
     const lookX = this.controls.lookData.x;
     const lookY = this.controls.lookData.y;
-
-    // Slower look sensitivity when aiming
-    const sensitivityMultiplier = this.isAiming ? 0.4 : 1.0;
+    const sensitivityMultiplier = this.isAiming ? 0.3 : 1.0;
 
     if (Math.abs(lookX) > 0.001) {
       this.rotationY -= lookX * 40 * this.lookSensitivityX * sensitivityMultiplier;
     }
-
     if (Math.abs(lookY) > 0.001) {
       this.rotationX += lookY * 40 * this.lookSensitivityY * sensitivityMultiplier;
       this.rotationX = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, this.rotationX));
     }
-
     this.camera.quaternion.setFromEuler(new THREE.Euler(this.rotationX, this.rotationY, 0, 'YXZ'));
   }
 
