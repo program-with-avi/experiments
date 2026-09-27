@@ -23,12 +23,12 @@ class IntentModel(nn.Module):
 class Brain:
     def __init__(self):
         self.intents = {
-            "greeting": ["hi", "hello", "hey", "good morning", "good evening", "hi there", "hello buddy"],
-            "goodbye": ["bye", "see you", "goodnight", "exit", "quit", "goodbye", "bye bye"],
+            "greeting": ["hi! How are you?", "hello, nice to meet you", "hey there", "good morning", "good evening", "hi there", "hello buddy", "wassup!", "Yo bro", "Bonjour! un cafe?", "How you doing?", "nice to see you"],
+            "goodbye": ["bye", "see you", "goodnight", "Cya!", "GGs!", "goodbye", "bye bye", "later champ", "goodluck!","nice meeting you"],
             "math": ["plus", "minus", "times", "divided by", "calculate", "sum", "math", "add", "subtract", "multiply", "divide"],
-            "status": ["how are you", "how is it going", "are you okay", "how are you doing"],
+            "status": ["how are you", "how is it going", "are you okay","What's going on", "how can i help"],
             "identity": ["who are you", "what is your name", "tell me about yourself", "who created you"],
-            "friendship": ["be my friend", "talk to me", "let's hang out", "friend", "best friend"],
+            "friendship": ["be my friend", "talk to me", "let's hang out", "friend", "best friend", "best friends forever"],
             "knowledge": ["tell me about", "who is", "where is", "what happened", "current events", "news", "capital of", "what is the capital", "what is python", "weather", "sleep", "hungry", "love", "time", "smart", "age", "do you sleep", "are you hungry"]
         }
         self.tags = sorted(self.intents.keys())
@@ -49,6 +49,9 @@ class Brain:
         
         self.model = IntentModel(self.input_size, self.hidden_size, self.output_size)
         self._train()
+        print("Vocabulary size:", self.input_size)
+        print("Output classes:", self.output_size)
+        print("Vocabulary:", self.words)
 
     def _tokenize(self, sentence):
         import re
