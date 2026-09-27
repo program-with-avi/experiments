@@ -25,10 +25,11 @@ class Brain:
         self.intents = {
             "greeting": ["hi! How are you?", "hello, nice to meet you", "hey there", "good morning", "good evening", "hi there", "hello buddy", "wassup!", "Yo bro", "Bonjour! un cafe?", "How you doing?", "nice to see you"],
             "goodbye": ["bye", "see you", "goodnight", "Cya!", "GGs!", "goodbye", "bye bye", "later champ", "goodluck!","nice meeting you"],
-            "math": ["plus", "minus", "times", "divided by", "calculate", "sum", "math", "add", "subtract", "multiply", "divide"],
+            "math": ["plus","minus","times","divided by","calculate","sum","math","add","subtract","multiply", "divide","what is the result","calculate this","do some math"],
             "status": ["how are you", "how is it going", "are you okay","What's going on", "how can i help"],
             "identity": ["who are you", "what is your name", "tell me about yourself", "who created you"],
             "friendship": ["be my friend", "talk to me", "let's hang out", "friend", "best friend", "best friends forever"],
+            "identity": ["who are you","what is your name","tell me about yourself","who created you","who made you", "who built you", "who is your creator"],
             "knowledge": ["tell me about", "who is", "where is", "what happened", "current events", "news", "capital of", "what is the capital", "what is python", "weather", "sleep", "hungry", "love", "time", "smart", "age", "do you sleep", "are you hungry"]
         }
         self.tags = sorted(self.intents.keys())
@@ -49,9 +50,6 @@ class Brain:
         
         self.model = IntentModel(self.input_size, self.hidden_size, self.output_size)
         self._train()
-        print("Vocabulary size:", self.input_size)
-        print("Output classes:", self.output_size)
-        print("Vocabulary:", self.words)
 
     def _tokenize(self, sentence):
         import re
@@ -59,7 +57,13 @@ class Brain:
         # Remove punctuation
         sentence = re.sub(r'[?!\.,]', '', sentence)
         tokens = sentence.split()
-        return [t for t in tokens if t not in self.ignore_words]
+        tokens = [
+            self._normalize_word(token)
+            for token in tokens
+            if token not in self.ignore_words
+        ]
+
+        return tokens
 
     def _bag_of_words(self, tokenized_sentence):
         bag = np.zeros(len(self.words), dtype=np.float32)
@@ -106,3 +110,23 @@ class Brain:
         if prob.item() > 0.6:
             return tag
         return "unknown"
+    def _normalize_word(self, word):
+        word = word.lower()
+
+        replacements = {
+            "made": "make",
+            "makes": "make",
+            "making": "make",
+            "created": "create",
+            "creating": "create",
+            "creator": "create",
+            "calculated": "calculate",
+            "calculating": "calculate",
+            "calculation": "calculate",
+            "multiplied": "multiply",
+            "multiplying": "multiply",
+            "divided": "divide",
+            "dividing": "divide",
+        }
+
+        return replacements.get(word, word)
