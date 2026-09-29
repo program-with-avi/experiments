@@ -5,19 +5,32 @@ import json
 import os
 
 class IntentModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, vocab_size, embed_size, hidden_size, output_size):
         super(IntentModel, self).__init__()
-        self.l1 = nn.Linear(input_size, hidden_size)
+
+        self.embedding = nn.EmbeddingBag(
+            vocab_size,
+            embed_size,
+            mode="mean"
+        )
+
+        self.l1 = nn.Linear(embed_size, hidden_size)
         self.l2 = nn.Linear(hidden_size, hidden_size)
         self.l3 = nn.Linear(hidden_size, output_size)
+
         self.relu = nn.ReLU()
-    
-    def forward(self, x):
-        out = self.l1(x)
+
+    def forward(self, x, offsets):
+        out = self.embedding(x, offsets)
+
+        out = self.l1(out)
         out = self.relu(out)
+
         out = self.l2(out)
         out = self.relu(out)
+
         out = self.l3(out)
+
         return out
 
 class Brain:
@@ -46,9 +59,15 @@ class Brain:
         
         self.input_size = len(self.words)
         self.output_size = len(self.tags)
+        self.embed_size = 16
         self.hidden_size = 8
-        
-        self.model = IntentModel(self.input_size, self.hidden_size, self.output_size)
+
+        self.model = IntentModel(
+            self.input_size,
+            self.embed_size,
+            self.hidden_size,
+            self.output_size
+        )
         self._train()
 
     def _tokenize(self, sentence):
@@ -65,50 +84,77 @@ class Brain:
 
         return tokens
 
-    def _bag_of_words(self, tokenized_sentence):
-        bag = np.zeros(len(self.words), dtype=np.float32)
-        for idx, w in enumerate(self.words):
-            if w in tokenized_sentence:
-                bag[idx] = 1.0
-        return bag
+    def _sentence_to_ids(self, sentence):
+        tokens = self._tokenize(sentence)
+
+        ids = []
+
+        for token in tokens:
+            if token in self.words:
+                ids.append(self.words.index(token))
+
+        return ids
 
     def _train(self):
         X_train = []
         y_train = []
-        
+
         for i, tag in enumerate(self.tags):
             for pattern in self.intents[tag]:
-                w = self._tokenize(pattern)
-                X_train.append(self._bag_of_words(w))
-                y_train.append(i)
-        
-        X_train = torch.tensor(np.array(X_train))
-        y_train = torch.tensor(np.array(y_train), dtype=torch.long)
-        
+                ids = self._sentence_to_ids(pattern)
+
+                if ids:
+                    X_train.append(ids)
+                    y_train.append(i)
+
+        # Flatten all sentences into one tensor
+        flat_words = []
+        offsets = []
+
+        current_offset = 0
+
+        for sentence in X_train:
+            offsets.append(current_offset)
+            flat_words.extend(sentence)
+            current_offset += len(sentence)
+
+        X_train = torch.tensor(flat_words, dtype=torch.long)
+        offsets = torch.tensor(offsets, dtype=torch.long)
+        y_train = torch.tensor(y_train, dtype=torch.long)
+
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
-        
+
         for epoch in range(500):
-            outputs = self.model(X_train)
+            outputs = self.model(X_train, offsets)
+
             loss = criterion(outputs, y_train)
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
     def predict(self, sentence):
-        tokenized = self._tokenize(sentence)
-        X = self._bag_of_words(tokenized)
-        X = torch.from_numpy(X).reshape(1, -1)
-        
-        output = self.model(X)
+        ids = self._sentence_to_ids(sentence)
+
+        if not ids:
+            return "unknown"
+
+        X = torch.tensor(ids, dtype=torch.long)
+        offsets = torch.tensor([0], dtype=torch.long)
+
+        output = self.model(X, offsets)
+
         _, predicted = torch.max(output, dim=1)
+
         tag = self.tags[predicted.item()]
-        
+
         probs = torch.softmax(output, dim=1)
         prob = probs[0][predicted.item()]
-        
+
         if prob.item() > 0.6:
             return tag
+
         return "unknown"
     def _normalize_word(self, word):
         word = word.lower()
