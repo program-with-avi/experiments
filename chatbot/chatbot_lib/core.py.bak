@@ -31,26 +31,8 @@ class ChatBot:
             self.memory["user_name"] = name
             return f"Nice to meet you, {name}! I'll remember that."
 
-        # Brain v0.5 Two-Stage Prediction
-        frame = self.brain.predict_frame(prompt)
-        intent = frame["intent"]
-        polarity = frame["polarity"]
-
-        # Negation handling: suppress action and acknowledge request
-        if polarity == "negated":
-            if intent == "math":
-                return "Understood, I won't calculate that."
-            elif intent == "identity":
-                return "Understood, I will keep my identity to myself."
-            elif intent == "friendship":
-                return "Understood, I will give you some space."
-            elif intent == "greeting":
-                return "Alright, I will stay quiet."
-            elif intent == "knowledge":
-                return "Got it, I won't share information about that."
-            else:
-                return "Understood, I won't do that."
-
+        intent = self.brain.predict(prompt)
+        
         # Personalized greeting if name is known
         if intent == "greeting" and "user_name" in self.memory:
             return f"Hello {self.memory['user_name']}! Good to see you again."
