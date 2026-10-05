@@ -1,0 +1,197 @@
+{
+  "model_type": "LNResGRUModel",
+  "trainable_parameters": 432960,
+  "fp32_size_kb": 1691.25,
+  "int8_size_kb": 422.81,
+  "sram_hidden_state_kb": 1.25,
+  "esp32_feasible": true,
+  "final_train_loss": 0.0967,
+  "final_train_ppl": 1.1,
+  "best_val_loss": 0.1074,
+  "best_val_ppl": 1.11,
+  "epochs": 12,
+  "total_training_time_sec": 271.25,
+  "dataset_size": 5000,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.7982,
+      "train_ppl": 16.42,
+      "val_loss": 0.6335,
+      "val_ppl": 1.88,
+      "lr": 0.003,
+      "time_sec": 22.85
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.43,
+      "train_ppl": 1.54,
+      "val_loss": 0.157,
+      "val_ppl": 1.17,
+      "lr": 0.002954,
+      "time_sec": 22.74
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.1878,
+      "train_ppl": 1.21,
+      "val_loss": 0.1262,
+      "val_ppl": 1.13,
+      "lr": 0.002819,
+      "time_sec": 22.44
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.1478,
+      "train_ppl": 1.16,
+      "val_loss": 0.12,
+      "val_ppl": 1.13,
+      "lr": 0.002605,
+      "time_sec": 22.63
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.1329,
+      "train_ppl": 1.14,
+      "val_loss": 0.117,
+      "val_ppl": 1.12,
+      "lr": 0.002325,
+      "time_sec": 22.5
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.1235,
+      "train_ppl": 1.13,
+      "val_loss": 0.1169,
+      "val_ppl": 1.12,
+      "lr": 0.001999,
+      "time_sec": 23.28
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.1157,
+      "train_ppl": 1.12,
+      "val_loss": 0.1105,
+      "val_ppl": 1.12,
+      "lr": 0.00165,
+      "time_sec": 22.92
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.1103,
+      "train_ppl": 1.12,
+      "val_loss": 0.1118,
+      "val_ppl": 1.12,
+      "lr": 0.001301,
+      "time_sec": 22.1
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.1051,
+      "train_ppl": 1.11,
+      "val_loss": 0.1098,
+      "val_ppl": 1.12,
+      "lr": 0.000975,
+      "time_sec": 22.8
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.1014,
+      "train_ppl": 1.11,
+      "val_loss": 0.1085,
+      "val_ppl": 1.11,
+      "lr": 0.000695,
+      "time_sec": 22.37
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.0984,
+      "train_ppl": 1.1,
+      "val_loss": 0.1093,
+      "val_ppl": 1.12,
+      "lr": 0.000481,
+      "time_sec": 22.21
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.0967,
+      "train_ppl": 1.1,
+      "val_loss": 0.1074,
+      "val_ppl": 1.11,
+      "lr": 0.000346,
+      "time_sec": 22.35
+    }
+  ],
+  "sample_generations": [
+    {
+      "prompt": "who are you?",
+      "greedy_response": "I am a compact chatbot created to converse and share knowledge directly on microcontrollers.",
+      "sampled_response": "I am a lightweight neural network that generates novel responses token by token."
+    },
+    {
+      "prompt": "what is your purpose?",
+      "greedy_response": "I am a lightweight neural network that generates novel responses token by token.",
+      "sampled_response": "Of course! I am an educational AI companion built to demonstrate local language generation on microchips."
+    },
+    {
+      "prompt": "what is the sun?",
+      "greedy_response": "The sun is a massive star at the center of our solar system that provides light, warmth, and energy to Earth.",
+      "sampled_response": "The sun holds the solar system together with its gravitational pull and powers weather and life on our planet."
+    },
+    {
+      "prompt": "why is the sky blue?",
+      "greedy_response": "The sky is blue because Earth's atmosphere scatters shorter blue wavelengths of sunlight more than other colors, a phenomenon called",
+      "sampled_response": "Interesting question! The sky is blue because Earth's atmosphere scatters shorter blue wavelengths of sunlight more than other colors, a phenomenon cal"
+    },
+    {
+      "prompt": "what is an esp32?",
+      "greedy_response": "An ESP32-WROOM has five hundred twenty kilobytes of internal SRAM and four megabytes of extern",
+      "sampled_response": "An ESP32-WROOM has five hundred twenty kilobytes of internal SRAM and four megabytes of extern"
+    },
+    {
+      "prompt": "what is an ESP32?",
+      "greedy_response": "The ESP32 is a popular low-power dual-core microcontroller featuring built-in Wi-Fi and Bluetooth, ideal for embedded edge",
+      "sampled_response": "An ESP32-WROOM has five hundred twenty kilobytes of internal SRAM and four megabytes of extern"
+    },
+    {
+      "prompt": "tell me about Python.",
+      "greedy_response": "Python is widely used in artificial intelligence, scientific computing, web development, and educational computer science.",
+      "sampled_response": "Python is widely used in artificial intelligence, scientific computing, web development, and educational computer science."
+    },
+    {
+      "prompt": "what is artificial intelligence?",
+      "greedy_response": "AI models learn complex statistical representations of text, images, and audio by adjusting mathematical weights.",
+      "sampled_response": "Machine learning enables software algorithms to improve their performance at tasks by observing training data rather than"
+    },
+    {
+      "prompt": "tell me about trees.",
+      "greedy_response": "To explain that: Ancient forests play a crucial role in regulating Earth's global climate and water cycles.",
+      "sampled_response": "Trees absorb carbon dioxide, produce oxygen, stabilize soil against erosion, and provide vital"
+    },
+    {
+      "prompt": "why do people love music?",
+      "greedy_response": "Listening to music stimulates dopamine release in the brain and can inspire joy, peacefulness, or focused con",
+      "sampled_response": "Here is the idea: Music is the art of arranging sounds, melodies, harmonies, and rhythms in expressive, emotionally"
+    },
+    {
+      "prompt": "hello friend!",
+      "greedy_response": "To explain that: Hi there! How can I help you today?",
+      "sampled_response": "Here is the idea: Hello! It is great to chat with you today. What would you like to explore?"
+    },
+    {
+      "prompt": "what is friendship?",
+      "greedy_response": "Having supportive friends enriches emotional well-being and provides a comforting sense of belonging.",
+      "sampled_response": "Here is the idea: Friendship is a reciprocal relationship of trust, mutual affection, empathy, and shared life experi"
+    },
+    {
+      "prompt": "do you need to sleep?",
+      "greedy_response": "During sleep, the brain cleanses metabolic waste products and reorganizes neural connections formed during the day.",
+      "sampled_response": "Of course! Sleep is essential for resting the physical body, consolidating memories, and restoring brain chemistry."
+    },
+    {
+      "prompt": "what is a tokenizer?",
+      "greedy_response": "Tokenizers bridge human written language and numeric vector spaces inside machine learning models.",
+      "sampled_response": "Tokenizers bridge human written language and numeric vector spaces inside machine learning models."
+    }
+  ]
+}

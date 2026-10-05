@@ -9,6 +9,7 @@ coherent text without relying on external cloud APIs or web scraping entropy.
 import json
 import os
 import random
+import re
 from typing import Dict, List, Optional, Tuple
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -315,6 +316,7 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
         "questions": [
             "what is a processor?",
             "what is a cpu?",
+            "what is a CPU?",
             "what does a central processing unit do?",
             "how does a cpu execute code?"
         ],
@@ -327,7 +329,9 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
     "ram_vs_flash": {
         "questions": [
             "what is the difference between ram and flash memory?",
+            "what is the difference between RAM and flash memory?",
             "what is ram?",
+            "what is RAM?",
             "what is flash memory?",
             "why do computers need both ram and rom?"
         ],
@@ -340,9 +344,15 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
     "esp32": {
         "questions": [
             "what is an esp32?",
+            "what is an ESP32?",
             "tell me about the esp32 microcontroller.",
+            "tell me about the ESP32 microcontroller.",
+            "tell me about the esp32.",
+            "tell me about the ESP32.",
             "why is esp32 popular?",
-            "can esp32 run artificial intelligence?"
+            "why is ESP32 popular?",
+            "can esp32 run artificial intelligence?",
+            "can an ESP32 run AI?"
         ],
         "answers": [
             "The ESP32 is a popular low-power dual-core microcontroller featuring built-in Wi-Fi and Bluetooth, ideal for embedded edge projects.",
@@ -353,9 +363,15 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
     "python": {
         "questions": [
             "what is python?",
+            "what is Python?",
+            "tell me about python.",
+            "tell me about Python.",
             "tell me about python programming.",
+            "tell me about Python programming.",
             "why is python popular in ai?",
-            "what makes python a good language?"
+            "why is Python popular in AI?",
+            "what makes python a good language?",
+            "what makes Python a good language?"
         ],
         "answers": [
             "Python is a versatile, high-level programming language celebrated for its clean, readable syntax and extensive library ecosystem.",
@@ -366,8 +382,11 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
     "c_language": {
         "questions": [
             "what is c programming?",
+            "what is C programming?",
             "why is c used for microcontrollers?",
-            "tell me about the c language."
+            "why is C used for microcontrollers?",
+            "tell me about the c language.",
+            "tell me about the C language."
         ],
         "answers": [
             "C is an efficient low-level programming language that provides direct memory access and compiles into fast machine instructions.",
@@ -379,6 +398,7 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
         "questions": [
             "what is artificial intelligence?",
             "what is ai?",
+            "what is AI?",
             "how does machine learning work?",
             "can machines really learn?"
         ],
@@ -448,7 +468,8 @@ TOPICS: Dict[str, Dict[str, List[str]]] = {
             "why do humans need to sleep?",
             "what happens when we sleep?",
             "is sleep important?",
-            "do you sleep?"
+            "do you sleep?",
+            "do you need to sleep?"
         ],
         "answers": [
             "Sleep is essential for resting the physical body, consolidating memories, and restoring brain chemistry.",
@@ -563,13 +584,42 @@ def generate_conversational_corpus(
 
     # 2. Capitalization and punctuation variations on questions
     augmented_pairs: List[Tuple[str, str]] = []
+    term_replacements = [
+        ("esp32", "ESP32"),
+        ("python", "Python"),
+        ("ai", "AI"),
+        ("cpu", "CPU"),
+        ("ram", "RAM"),
+        ("c programming", "C programming"),
+        ("c language", "C language")
+    ]
+
     for q, a in pairs:
         augmented_pairs.append((q, a))
-        q_cap = q.capitalize()
-        if q_cap != q:
+
+        # Punctuation stripping and adding
+        q_clean = q.rstrip("?!. ")
+        augmented_pairs.append((q_clean, a))
+        augmented_pairs.append((q_clean + "?", a))
+        augmented_pairs.append((q_clean + ".", a))
+
+        # Sentence capitalization
+        q_cap = q_clean.capitalize()
+        if q_cap != q_clean:
             augmented_pairs.append((q_cap, a))
-        if q.endswith("?") or q.endswith("!"):
-            augmented_pairs.append((q[:-1], a))
+            augmented_pairs.append((q_cap + "?", a))
+            augmented_pairs.append((q_cap + ".", a))
+
+        # Technical term case variants
+        for low_term, cap_term in term_replacements:
+            if low_term in q.lower():
+                pattern = re.compile(re.escape(low_term), re.IGNORECASE)
+                q_variant = pattern.sub(cap_term, q)
+                if q_variant != q:
+                    augmented_pairs.append((q_variant, a))
+                    q_v_cap = q_variant.capitalize()
+                    augmented_pairs.append((q_v_cap, a))
+                    augmented_pairs.append((q_v_cap.rstrip("?!. ") + ".", a))
 
     random.shuffle(augmented_pairs)
 

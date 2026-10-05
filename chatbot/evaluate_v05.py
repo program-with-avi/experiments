@@ -48,7 +48,7 @@ def run_full_evaluation():
     brain_v5 = Brain(model_type="embedding_bag", enable_modifiers=True, seed=42)
     diag_v5 = brain_v5.get_diagnostics()
 
-    bot_v5 = ChatBot()
+    bot_v5 = ChatBot(mode="v0.5")
 
     # -------------------------------------------------------------------------
     # SUITE 1: ORIGINAL EVALUATION SUITE
