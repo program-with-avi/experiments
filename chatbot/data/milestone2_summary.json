@@ -1,0 +1,14 @@
+{
+  "vocab_size": 768,
+  "num_merges": 507,
+  "total_pairs": 6000,
+  "train_pairs": 5400,
+  "val_pairs": 600,
+  "avg_tokens_per_turn": 50.36966666666667,
+  "chars_per_token": 2.8530200054265467,
+  "tokens_per_word": 2.1562818838873548,
+  "batch_shape": [
+    32,
+    63
+  ]
+}
